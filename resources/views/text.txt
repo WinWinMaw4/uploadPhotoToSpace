@@ -1,0 +1,91 @@
+
+ှှStorage Server ဝယ်မယ်
+//searching=>How to Set Up a Scalable Laravel 9 Application using Managed Databases and Object Storage
+
+1 Digital Ocean ကိုသွား
+2 Spaces Object ကိုဝယ်
+3 sgp1 နဲ့ဝယ် Singapore Region
+4 key ရယ် Secreate keyရယ် ရလိမ့်မယ်
+    Secreate key က ဝယ်တဲ့အချိန်မှာ တစ်ခါပဲပေါ်တာ
+5 config>FileSystem.phpရဲ့ driver ထဲမှာ following text word ကို ထည့်ပါ,
+    //Example projectမှာ 'spaces' နေရာ 'do' လို့ပေးထားလို့ do နေရာနဲ့မှာ spaces အစားထိုးပြီးလုပ်လို့ရပါတယ်
+    //This is only naming
+
+        'spaces' => [
+           'driver' => 's3',
+           'key' => env('DO_SPACES_KEY'),
+           'secret' => env('DO_SPACES_SECRET'),
+           'endpoint' => env('DO_SPACES_ENDPOINT'),
+           'region' => env('DO_SPACES_REGION'),
+           'bucket' => env('DO_SPACES_BUCKET'),
+        ],
+
+6. 'default' => env('FILESYSTEM_DISK', 'local'),->'default' => env('FILESYSTEM_DISK', 'spaces'),
+7 default local ကို spaces changeပေးလိုက်ရင် ရပြီဆိုပေမယ့် local အတိုင်းထားချင်တယ်ဆိုရင် အဲ့အတိုင်းထားပြီးလုပ်လဲရပါတယ်
+8 AWS--- ရဲ့အောက်မှာ
+    DO_ACCESS_KEY_ID=TBGOVWMYZ3N3DQ4RRCXM
+    DO_SECRET_ACCESS_KEY=gGPCY2Pc3x+XxNshQXjc80p+MNR4dknf0mLhZIAK5to
+    DO_DEFAULT_REGION=sgp1
+    DO_BUCKET=mms-student
+    DO_ENDPOINT=https://sgp1.digitaloceanspaces.com/
+
+9 project ထဲမှာ စသုံးတော့မယ်, photo saveမယ်ပဲ ဆိုပါစို့
+    PhotoController.php
+          {
+                 $upload = new Photo();
+         //        $request->file("photo")->storeAs("public/photo/", $fileName);
+         //        $name = $request->file('photo')->store('wwm','do');<- private အနေနဲ့သိမ်းသွားလိမ့်မယ်
+                 $name = Storage::disk('do')->put('wwm',$request->photo,"public");
+                 $upload->user_id = Auth::id();
+                 $upload->photo = $name;
+                 $upload->message = $request->message;
+                 $upload->save();
+                 return $name;
+             }
+
+10 ui ကနေ ပြန်ခေါ်မယ် spaces/ Storage serverမှာ saveထားတဲ့ imgကို
+    index.blade.php
+            for public url
+                <img height="300px" src="{{\Illuminate\Support\Facades\Storage::disk('do')->url('wwm/obD6VLje4tcS3Isj8mrxSHsFurZ40e8PW2DgUoll.jpg')}}" class="img-fluid card-img" alt="">
+
+            for private url
+                <img height="300px" src="{{\Illuminate\Support\Facades\Storage::disk('do')->temporaryUrl('wwm/5oNpKAXwFjZHp1loysJB6jH1x0ltjXavegWy76XL.jpg',now()->addMinute(3))}}" class="img-fluid card-img" alt="">
+
+            for looping
+             @foreach($photos as $photo)
+                 <p>{{$photo->user_id}}</p>
+                 <p>{{$photo->message}}</p>
+                <img src="{{\Illuminate\Support\Facades\Storage::disk('do')->url($photo->photo)}}" class="card-img-bottom" style="max-height: 150px;object-fit: cover" alt="">
+             @endforeach
+<----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
+<------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
+
+DataBase Serverပါ ဝယ်ချိတ်မယ်
+1 MySQL ပဲ ဝယ်ချိတ်မယ်။ အသုံးများတာက MongoDB,
+    MySQl ကို Digital Ocean က ဝယ်လိုက်
+    အဲ့မှာ အချက်အလက်တွေရလာရင် projectရဲ့ .env fileထဲမှာ သွားချိန်းပေးလိုက်
+            {{{{{{
+            username = doadmin
+            password = AVNS_ALDz9kLD2FOH026 hide
+            host = mms-student-do-user-9906666-0.b.db.ondigitalocean.com
+            port = 25060
+            database = defaultdb
+            sslmode = REQUIRED
+            }}}}}}
+
+        DB_CONNECTION=mysql
+        DB_HOST=mms-student-do-user-9906666-0.b.db.ondigitalocean.com
+        DB_PORT=25060 //တန်ဖိုးကြီးတာပေး မဟုတ်ရင် hackခံရနိုင်တယ်
+        DB_DATABASE=defaultdb
+        DB_USERNAME=doadmin
+        DB_PASSWORD=AVNS_ALDz9kLD2FOH026
+
+2 php artisan migrate လုပ်။ နောက်ပိုင်းထွက်တဲ့ versionမှာ password tableမှာ id မပါလို့ primary key errorတက်နေရင်
+    password tableမှာ $table->id()  သွားထည့်
+    ပြီးရင် migrate ပြန်လုပ်, success ဖြစ်ရင်ရပြီ
+
+    ကိုယ်ထည့်တာ အောင်မအောင်ကြည့်ချင်သေးရင် "table Plus software" နဲ့သုံး
+    my sql ကိုရွေး> data 5 ခုဖြည့် testလုပ်ကြည့် အကုန်စိမ်းရင်ရပြီ
+
+
+
